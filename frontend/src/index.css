@@ -1,0 +1,158 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 45 33% 97%;
+    --foreground: 150 25% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 150 25% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 150 25% 12%;
+
+    --primary: 145 55% 32%;
+    --primary-foreground: 45 33% 97%;
+
+    --secondary: 38 85% 55%;
+    --secondary-foreground: 150 25% 12%;
+
+    --muted: 45 20% 92%;
+    --muted-foreground: 150 10% 45%;
+
+    --accent: 38 85% 55%;
+    --accent-foreground: 150 25% 12%;
+
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 45 15% 88%;
+    --input: 45 15% 88%;
+    --popover-foreground: 222.2 84% 4.9%;
+    
+    /* Agriculture Green Theme */
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 142 30% 96%;
+    --secondary-foreground: 142 76% 36%;
+    --accent: 142 50% 90%;
+    --accent-foreground: 142 76% 36%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 142 76% 36%;
+    --radius: 0.5rem;
+    
+    /* Custom Agriculture Colors */
+    --agri-green: 142 76% 36%;
+    --agri-green-light: 142 50% 90%;
+    --agri-green-dark: 142 76% 26%;
+    --agri-emerald: 160 84% 39%;
+    --agri-lime: 84 81% 44%;
+    --agri-soil: 30 30% 45%;
+    --agri-sky: 199 89% 48%;
+
+    /* Custom tokens */
+    --success: 145 55% 42%;
+    --warning: 38 90% 50%;
+    --info: 210 70% 50%;
+    --weather-gradient: linear-gradient(135deg, hsl(210 70% 50%), hsl(195 80% 45%));
+    --crop-gradient: linear-gradient(135deg, hsl(145 55% 32%), hsl(130 45% 45%));
+    --price-gradient: linear-gradient(135deg, hsl(38 85% 55%), hsl(25 80% 50%));
+    --water-gradient: linear-gradient(135deg, hsl(200 80% 50%), hsl(210 70% 40%));
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 142 76% 36%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+@layer components {
+  .gradient-weather {
+    background: var(--weather-gradient);
+  }
+  .gradient-crop {
+    background: var(--crop-gradient);
+  }
+  .gradient-price {
+    background: var(--price-gradient);
+  }
+  .gradient-water {
+    background: var(--water-gradient);
+  }
+}
+/* Custom Utilities */
+@layer utilities {
+  /* Glassmorphism */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Animations */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+  
+  .animate-slide-down {
+    animation: slideDown 0.3s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+}

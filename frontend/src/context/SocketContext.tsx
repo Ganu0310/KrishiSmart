@@ -1,0 +1,35 @@
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
+
+const SocketContext = createContext<Socket | null>(null);
+
+export const useSocket = () => {
+    return useContext(SocketContext);
+};
+
+export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [socket, setSocket] = useState<Socket | null>(null);
+
+    useEffect(() => {
+        // Determine connection URL (env var or default)
+        const SOCKET_URL = 'http://localhost:5000';
+
+        const newSocket = io(SOCKET_URL, {
+            withCredentials: true,
+            autoConnect: true,
+        });
+
+        setSocket(newSocket);
+
+        // Cleanup on unmount
+        return () => {
+            newSocket.close();
+        };
+    }, []);
+
+    return (
+        <SocketContext.Provider value={socket}>
+            {children}
+        </SocketContext.Provider>
+    );
+};
