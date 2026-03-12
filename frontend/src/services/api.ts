@@ -38,6 +38,7 @@ const handleApiError = (error: unknown): never => {
 export interface User {
   id: string;
   name: string;
+  email: string;
   mobile: string;
   role: "farmer" | "admin";
   location: string;
@@ -45,6 +46,7 @@ export interface User {
   profilePicture?: string;
   farmSize?: number;
   address?: string;
+  isEmailVerified?: boolean;
 }
 
 export interface BackendWeatherData {
@@ -128,20 +130,41 @@ export interface AuthResponse {
 }
 
 export const authApi = {
-  login: async (email: string, password: string): Promise<AuthResponse> => {
+  loginOtp: async (mobile: string): Promise<{ message: string }> => {
     try {
-      const res = await apiClient.post<AuthResponse>("/api/auth/login", {
-        email,
-        password,
-      });
+      const res = await apiClient.post("/api/auth/login-otp", { mobile });
+      return res.data;
+    } catch (error) {
+       return handleApiError(error);
+    }
+  },
+  verifyLoginOtp: async (mobile: string, otp: string): Promise<AuthResponse> => {
+    try {
+      const res = await apiClient.post<AuthResponse>("/api/auth/verify-login-otp", { mobile, otp });
       return res.data;
     } catch (error) {
       return handleApiError(error);
     }
   },
-  adminLogin: async (email: string, password: string): Promise<AuthResponse> => {
+  loginEmailOtp: async (email: string): Promise<{ message: string }> => {
     try {
-      const res = await apiClient.post<AuthResponse>("/api/admin/login", {
+      const res = await apiClient.post("/api/auth/login-email-otp", { email });
+      return res.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+  verifyLoginEmailOtp: async (email: string, otp: string): Promise<AuthResponse> => {
+    try {
+      const res = await apiClient.post<AuthResponse>("/api/auth/verify-login-email-otp", { email, otp });
+      return res.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+    adminLogin: async (email: string, password: string): Promise<AuthResponse> => {
+    try {
+      const res = await apiClient.post<AuthResponse>("/api/auth/admin-login", {
         email,
         password,
       });
@@ -152,15 +175,38 @@ export const authApi = {
   },
   register: async (data: {
     name: string;
-    email: string;
-    mobile?: string;
-    password: string;
+    email?: string;
+    mobile: string;
     role: "farmer" | "admin";
     location?: string;
     crops?: string[];
   }): Promise<AuthResponse> => {
     try {
       const res = await apiClient.post<AuthResponse>("/api/auth/register", data);
+      return res.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+  forgotPassword: async (email: string) => {
+    try {
+      const res = await apiClient.post("/api/auth/forgot-password", { email });
+      return res.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+  verifyOTP: async (email: string, otp: string) => {
+    try {
+      const res = await apiClient.post("/api/auth/verify-otp", { email, otp });
+      return res.data; // contains resetToken
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+  resetPassword: async (token: string, password: string) => {
+    try {
+      const res = await apiClient.post("/api/auth/reset-password", { token, password });
       return res.data;
     } catch (error) {
       return handleApiError(error);
@@ -318,7 +364,16 @@ export const marketApi = {
       return handleApiError(error);
     }
   },
+  getTrend: async (crop: string, days: number = 30): Promise<any> => {
+    try {
+      const res = await apiClient.get(`/api/market-prices/${crop}/trend`, { params: { days } });
+      return res.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
 };
+
 
 // Fertilizer Types
 export interface Fertilizer {
@@ -581,6 +636,221 @@ export const govDataAdminApi = {
   getDataQuality: async (): Promise<{ success: boolean; quality: DataQuality }> => {
     try {
       const res = await apiClient.get('/api/admin/gov-data/data-quality');
+      return res.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+};
+
+// ─── New Types ────────────────────────────────────────────────────────────────
+
+export interface WeatherForecastDay {
+  date: string;
+  tempMax: number;
+  tempMin: number;
+  avgTemp: number;
+  rainfall: number;
+  rainProbability: number;
+  windSpeed: number;
+  uvIndex: number;
+  weatherCode: number;
+  description: string;
+  sowingScore?: number;
+}
+
+export interface WeatherForecastResponse {
+  success: boolean;
+  location: string;
+  fetchedAt: string;
+  days: WeatherForecastDay[];
+}
+
+export interface PestRisk {
+  pest: string;
+  type: string;
+  level: 'low' | 'medium' | 'high' | 'critical';
+  advice: string;
+}
+
+export interface PestRiskResponse {
+  success: boolean;
+  crop: string;
+  overallRiskLevel: 'low' | 'medium' | 'high' | 'critical';
+  riskSummary: string;
+  risks: PestRisk[];
+  weatherSnapshot: {
+    temperature: number;
+    humidity: number;
+    rainfall: number;
+    windSpeed: number;
+  };
+  assessedAt: string;
+  staleWeatherData?: boolean;
+}
+
+export interface MarketTrendResponse {
+  success: boolean;
+  crop: string;
+  analysisPeriodDays: number;
+  trend: 'rising' | 'falling' | 'stable';
+  changePercent: number;
+  currentPrice: number;
+  priceRange: { min: number; max: number };
+  bestMandi: { market: string; avgModalPrice: number; dataPoints: number } | null;
+  allMarkets: { market: string; avgModalPrice: number; dataPoints: number }[];
+  sellingAdvice: string;
+  chartData: { date: string; modalPrice: number; market: string }[];
+  dataPoints: number;
+}
+
+export interface GovernmentScheme {
+  _id: string;
+  schemeName: string;
+  ministry: string;
+  schemeType: 'subsidy' | 'insurance' | 'loan' | 'training' | 'equipment' | 'other';
+  benefitSummary: string;
+  eligibility: string;
+  howToApply: string;
+  applicationUrl: string;
+  applicableStates: string[];
+  applicableCrops: string[];
+  deadline: string;
+  isActive: boolean;
+}
+
+export interface SchemesResponse {
+  success: boolean;
+  data: GovernmentScheme[];
+  pagination: { total: number; page: number; pages: number };
+}
+
+export interface SowingCalendarResponse {
+  success: boolean;
+  crop: string;
+  location: string;
+  recommendation: string;
+  bestWindow: { startDate: string; endDate: string; durationDays: number; avgScore: number } | null;
+  bestSingleDay: WeatherForecastDay & { sowingScore: number };
+  forecastDays: (WeatherForecastDay & { sowingScore: number })[];
+  cropInfo: {
+    seasonalHint: string;
+    growthDuration: string;
+    optimalTempRange: string;
+    maxTolerableRainfall: string;
+  };
+}
+
+// ─── New API Namespaces ───────────────────────────────────────────────────────
+
+export const forecastApi = {
+  get: async (location = 'Nashik'): Promise<WeatherForecastResponse> => {
+    try {
+      const res = await apiClient.get<WeatherForecastResponse>('/api/weather/forecast', {
+        params: { location },
+      });
+      return res.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+};
+
+export const pestRiskApi = {
+  get: async (crop: string, location = 'Nashik'): Promise<PestRiskResponse> => {
+    try {
+      const res = await apiClient.get<PestRiskResponse>('/api/advisory/pest-risk', {
+        params: { crop, location },
+      });
+      return res.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+};
+
+export const marketTrendApi = {
+  get: async (crop: string, days = 30): Promise<MarketTrendResponse> => {
+    try {
+      const res = await apiClient.get<MarketTrendResponse>(`/api/market-prices/${crop}/trend`, {
+        params: { days },
+      });
+      return res.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+};
+
+export const schemesApi = {
+  getAll: async (params: { crop?: string; state?: string; type?: string; search?: string; page?: number } = {}): Promise<SchemesResponse> => {
+    try {
+      const res = await apiClient.get<SchemesResponse>('/api/schemes', { params });
+      return res.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+  getById: async (id: string): Promise<{ success: boolean; data: GovernmentScheme }> => {
+    try {
+      const res = await apiClient.get(`/api/schemes/${id}`);
+      return res.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+};
+
+export const sowingApi = {
+  get: async (crop: string, location = 'Nashik'): Promise<SowingCalendarResponse> => {
+    try {
+      const res = await apiClient.get<SowingCalendarResponse>('/api/advisory/sowing-calendar', {
+        params: { crop, location },
+      });
+      return res.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+};
+
+export const changePasswordApi = async (oldPassword: string, newPassword: string): Promise<{ message: string }> => {
+  try {
+    const res = await apiClient.put('/api/user/change-password', { oldPassword, newPassword });
+    return res.data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+// ─── Chatbot API Removed ────────────────────────────────────────────────────────
+// ─── Disease Identifier API ───────────────────────────────────────────────────
+
+export interface DiseaseResult {
+  disease: string;
+  confidence: string;
+  severity: string;
+  isHealthy: boolean;
+  description: string;
+  affectedCrop: string;
+  treatments: string[];
+  prevention: string[];
+  organicRemedy: string | null;
+}
+
+export interface DiseaseResponse {
+  success: boolean;
+  data: DiseaseResult;
+  model?: string;
+  top_3?: { class: string; confidence: string }[];
+}
+
+export const diseaseApi = {
+  identify: async (formData: FormData): Promise<DiseaseResponse> => {
+    try {
+      const res = await apiClient.post('/api/disease/identify', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       return res.data;
     } catch (error) {
       return handleApiError(error);

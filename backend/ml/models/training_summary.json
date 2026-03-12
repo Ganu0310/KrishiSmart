@@ -1,0 +1,9 @@
+{
+  "model_architecture": "EfficientNetV2B0",
+  "num_classes": 5,
+  "final_accuracy": 0.3199999928474426,
+  "final_loss": 1.6209930181503296,
+  "training_time_seconds": 217.38038039207458,
+  "epochs_completed": 17,
+  "timestamp": "2026-03-11T06:54:50Z"
+}

@@ -10,20 +10,20 @@ const calculateIrrigation = (req, res) => {
     if (!crop || soilMoisture === undefined || rainfallForecast === undefined) {
       return res
         .status(400)
-        .json({ message: 'crop, soilMoisture, and rainfallForecast are required' });
+        .json({ success: false, message: 'crop, soilMoisture, and rainfallForecast are required' });
     }
 
     const normalizedCrop = String(crop).toLowerCase();
     const allowedCrops = ['grape', 'onion', 'tomato'];
     if (!allowedCrops.includes(normalizedCrop)) {
-      return res.status(400).json({ message: 'Unsupported crop. Use grape, onion, or tomato.' });
+      return res.status(400).json({ success: false, message: 'Unsupported crop. Use grape, onion, or tomato.' });
     }
 
     const moisture = Number(soilMoisture); // 0–100 (%)
     const rainfallProb = Number(rainfallForecast); // 0–100 (%)
 
     if (Number.isNaN(moisture) || Number.isNaN(rainfallProb)) {
-      return res.status(400).json({ message: 'soilMoisture and rainfallForecast must be numbers' });
+      return res.status(400).json({ success: false, message: 'soilMoisture and rainfallForecast must be numbers' });
     }
 
     // Base water need per acre (liters) for a typical irrigation cycle in Nashik
@@ -61,6 +61,7 @@ const calculateIrrigation = (req, res) => {
 
     // For future: can incorporate area, soil type, ET, and AI forecasts.
     return res.json({
+      success: true,
       crop: normalizedCrop,
       soilMoisture: moisture,
       rainfallForecast: rainfallProb,
@@ -71,7 +72,7 @@ const calculateIrrigation = (req, res) => {
     });
   } catch (error) {
     console.error('Irrigation calculation error:', error.message);
-    return res.status(500).json({ message: 'Failed to calculate irrigation' });
+    return res.status(500).json({ success: false, message: 'Failed to calculate irrigation' });
   }
 };
 

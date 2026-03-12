@@ -1,1 +1,16 @@
-{}
+{
+  "weather:nashik": {
+    "data": {
+      "location": "Nashik",
+      "temperature": 30,
+      "humidity": 50,
+      "windSpeed": 0,
+      "rainfallProbability": 0,
+      "weatherDescription": "clear sky",
+      "heavyRainfallPredicted": false,
+      "timestamp": "2026-03-12T08:13:04.954Z",
+      "isMock": false
+    },
+    "expiresAt": 1773303784954
+  }
+}

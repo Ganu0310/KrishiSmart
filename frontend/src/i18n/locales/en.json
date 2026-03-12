@@ -1,0 +1,177 @@
+{
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "advisory": "Advisory",
+    "market": "Market",
+    "fertilizers": "Fertilizers",
+    "irrigation": "Irrigation",
+    "forecast": "Forecast",
+    "pestRisk": "Pest Risk",
+    "schemes": "Schemes",
+    "disease": "Disease ID",
+    "profile": "Profile",
+    "logout": "Logout",
+    "login": "Log In",
+    "getStarted": "Get Started",
+    "more": "More"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Smart Farming for India's Future",
+      "title": "Farm Smarter with",
+      "titleHighlight": "KrishiSmart",
+      "subtitle": "Your intelligent farming companion — real-time weather, market prices, crop advisory, and AI-powered tools designed for Indian farmers.",
+      "cta": "Start Farming Smart",
+      "login": "Log In"
+    },
+    "features": {
+      "title": "Everything You Need to Farm Better",
+      "subtitle": "Built specifically for Indian farmers with real-time data, government schemes, and AI-powered insights.",
+      "weather": {
+        "title": "Live Weather & Forecast",
+        "desc": "Real-time weather from WeatherUnion with 7-day forecasts and sowing advisories."
+      },
+      "market": {
+        "title": "Market Prices",
+        "desc": "Live mandi prices from Agmarknet for 200+ crops across India."
+      },
+      "advisory": {
+        "title": "Crop Advisory",
+        "desc": "Stage-wise crop advice with pest risk alerts and irrigation guidance."
+      },
+      "schemes": {
+        "title": "Government Schemes",
+        "desc": "Browse PM-KISAN, Fasal Bima Yojana and 50+ active farmer schemes."
+      },
+      "disease": {
+        "title": "Disease Identifier",
+        "desc": "Upload a leaf photo and get instant AI diagnosis with treatment steps."
+      },
+      "chatbot": {
+        "title": "AI Farm Assistant",
+        "desc": "Ask anything about farming in Hindi or English. Get expert answers instantly."
+      }
+    },
+    "stats": {
+      "farmers": "Farmers Served",
+      "crops": "Crops Covered",
+      "accuracy": "Advisory Accuracy",
+      "support": "Support"
+    },
+    "cta": {
+      "title": "Ready to Transform Your Farm?",
+      "subtitle": "Join thousands of farmers using KrishiSmart to make smarter decisions.",
+      "button": "Get Started Free"
+    }
+  },
+  "dashboard": {
+    "greeting": "Good day",
+    "subtitle": "Here's your farm overview for today",
+    "weather": {
+      "title": "Current Weather",
+      "humidity": "Humidity",
+      "wind": "Wind",
+      "rainfall": "Rain Chance"
+    },
+    "quickLinks": {
+      "title": "Quick Access",
+      "advisory": "Crop Advisory",
+      "market": "Market Prices",
+      "irrigation": "Irrigation Planner",
+      "forecast": "7-Day Forecast",
+      "pestRisk": "Pest Risk",
+      "fertilizers": "Fertilizers",
+      "schemes": "Govt. Schemes",
+      "disease": "Disease Identifier"
+    },
+    "alerts": {
+      "title": "Recent Alerts"
+    }
+  },
+  "advisory": {
+    "title": "Crop Advisory",
+    "subtitle": "Get personalized advice for your crop at every growth stage",
+    "selectCrop": "Select Crop",
+    "selectStage": "Select Growth Stage",
+    "getAdvice": "Get Advice",
+    "loading": "Fetching advisory...",
+    "stages": {
+      "germination": "Germination",
+      "vegetative": "Vegetative",
+      "flowering": "Flowering",
+      "fruiting": "Fruiting",
+      "harvest": "Harvest"
+    }
+  },
+  "market": {
+    "title": "Market Prices",
+    "subtitle": "Live mandi prices for crops across India",
+    "selectCrop": "Select a crop",
+    "price": "Price",
+    "market": "Market",
+    "date": "Date",
+    "trend": "Price Trend",
+    "noData": "No price data available"
+  },
+  "irrigation": {
+    "title": "Irrigation Planner",
+    "subtitle": "Calculate water requirements for your crops",
+    "cropType": "Crop Type",
+    "soilType": "Soil Type",
+    "area": "Field Area (acres)",
+    "calculate": "Calculate",
+    "result": {
+      "title": "Irrigation Recommendation",
+      "daily": "Daily Water Requirement",
+      "weekly": "Weekly Schedule",
+      "method": "Recommended Method"
+    }
+  },
+  "disease": {
+    "title": "Crop Disease Identifier",
+    "subtitle": "Upload a photo of your crop leaf for instant AI diagnosis",
+    "upload": {
+      "title": "Upload Leaf Image",
+      "hint": "Drag & drop or click to upload",
+      "formats": "Supports JPG, PNG, WEBP (max 5MB)",
+      "button": "Choose Image"
+    },
+    "identify": "Identify Disease",
+    "analyzing": "Analyzing image...",
+    "results": {
+      "disease": "Disease Detected",
+      "severity": "Severity",
+      "description": "Description",
+      "treatments": "Treatment Steps",
+      "prevention": "Prevention Tips"
+    },
+    "tryAnother": "Try Another Image",
+    "healthy": "Plant appears healthy!",
+    "severity": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    }
+  },
+  "chatbot": {
+    "title": "KrishiBot — Farm Assistant",
+    "placeholder": "Ask anything about farming...",
+    "send": "Send",
+    "typing": "KrishiBot is thinking...",
+    "welcome": "Namaste! I'm KrishiBot, your AI farming assistant. Ask me anything about crops, weather, pests, market prices, or government schemes!"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "search": "Search",
+    "filter": "Filter",
+    "perPage": "per kg",
+    "noResults": "No results found"
+  }
+}

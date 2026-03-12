@@ -29,7 +29,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +40,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import io from 'socket.io-client';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { adminUserSchema, type AdminUserFormValues } from "@/lib/validations/auth";
 
 // Initial form state
 const initialFormState = {
@@ -64,8 +67,20 @@ export default function AdminUsers() {
   // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState(initialFormState);
   const [formLoading, setFormLoading] = useState(false);
+
+  const form = useForm<AdminUserFormValues>({
+    resolver: zodResolver(adminUserSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      role: 'farmer',
+      mobile: '',
+      location: '',
+      crops: '',
+    },
+  });
 
   // Delete dialog state
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -117,32 +132,39 @@ export default function AdminUsers() {
   // Handlers
   const handleOpenAdd = () => {
     setEditingId(null);
-    setFormData(initialFormState);
+    form.reset({
+      name: '',
+      email: '',
+      password: '',
+      role: 'farmer',
+      mobile: '',
+      location: '',
+      crops: '',
+    });
     setIsDialogOpen(true);
   };
 
   const handleOpenEdit = (user: AdminUser) => {
     setEditingId(user._id);
-    setFormData({
+    form.reset({
       name: user.name,
-      email: user.email,
+      email: user.email || '',
       password: '', // Don't show password
-      role: user.role,
-      mobile: user.mobile,
-      location: user.location,
-      crops: user.crops.join(', '),
+      role: user.role as "farmer" | "admin",
+      mobile: user.mobile || '',
+      location: user.location || '',
+      crops: user.crops?.join(', ') || '',
     });
     setIsDialogOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: AdminUserFormValues) => {
     setFormLoading(true);
 
     try {
       const payload = {
-        ...formData,
-        crops: formData.crops.split(',').map(c => c.trim()).filter(Boolean),
+        ...values,
+        crops: values.crops ? values.crops.split(',').map(c => c.trim()).filter(Boolean) : [],
       };
 
       if (editingId) {
@@ -321,100 +343,96 @@ export default function AdminUsers() {
         {/* Create/Edit User Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
-            <form onSubmit={handleSubmit}>
-              <DialogHeader>
-                <DialogTitle>{editingId ? 'Edit User' : 'Add User'}</DialogTitle>
-                <DialogDescription>
-                  {editingId ? 'Update user details below.' : 'Add a new user to the system.'}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
-                  />
-                </div>
-                {!editingId && (
-                  <div className="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      required
-                      minLength={6}
-                    />
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <DialogHeader>
+                  <DialogTitle>{editingId ? 'Edit User' : 'Add User'}</DialogTitle>
+                  <DialogDescription>
+                    {editingId ? 'Update user details below.' : 'Add a new user to the system.'}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-1">
+                  
+                  <FormField control={form.control} name="name" render={({ field }) => (
+                    <FormItem className="grid gap-1 relative pb-4">
+                      <FormLabel>Name</FormLabel>
+                      <FormControl><Input {...field} /></FormControl>
+                      <div className="absolute -bottom-1 left-0"><FormMessage className="text-[11px]" /></div>
+                    </FormItem>
+                  )} />
+
+                  <FormField control={form.control} name="email" render={({ field }) => (
+                    <FormItem className="grid gap-1 relative pb-4">
+                      <FormLabel>Email</FormLabel>
+                      <FormControl><Input type="email" {...field} /></FormControl>
+                      <div className="absolute -bottom-1 left-0"><FormMessage className="text-[11px]" /></div>
+                    </FormItem>
+                  )} />
+
+                  {!editingId && (
+                    <FormField control={form.control} name="password" render={({ field }) => (
+                      <FormItem className="grid gap-1 relative pb-4">
+                        <FormLabel>Password</FormLabel>
+                        <FormControl><Input type="password" placeholder="Min 6 chars" {...field} /></FormControl>
+                        <div className="absolute -bottom-1 left-0"><FormMessage className="text-[11px]" /></div>
+                      </FormItem>
+                    )} />
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField control={form.control} name="role" render={({ field }) => (
+                      <FormItem className="grid gap-1 relative pb-4">
+                        <FormLabel>Role</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="farmer">Farmer</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <div className="absolute -bottom-1 left-0"><FormMessage className="text-[11px]" /></div>
+                      </FormItem>
+                    )} />
+
+                    <FormField control={form.control} name="mobile" render={({ field }) => (
+                      <FormItem className="grid gap-1 relative pb-4">
+                        <FormLabel>Mobile</FormLabel>
+                        <FormControl><Input maxLength={10} {...field} /></FormControl>
+                        <div className="absolute -bottom-1 left-0"><FormMessage className="text-[11px]" /></div>
+                      </FormItem>
+                    )} />
                   </div>
-                )}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="role">Role</Label>
-                    <Select
-                      value={formData.role}
-                      onValueChange={(value) => setFormData({ ...formData, role: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="farmer">Farmer</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="mobile">Mobile</Label>
-                    <Input
-                      id="mobile"
-                      value={formData.mobile}
-                      onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                      maxLength={10}
-                    />
-                  </div>
+
+                  <FormField control={form.control} name="location" render={({ field }) => (
+                    <FormItem className="grid gap-1 relative pb-4">
+                      <FormLabel>Location</FormLabel>
+                      <FormControl><Input {...field} /></FormControl>
+                      <div className="absolute -bottom-1 left-0"><FormMessage className="text-[11px]" /></div>
+                    </FormItem>
+                  )} />
+
+                  <FormField control={form.control} name="crops" render={({ field }) => (
+                    <FormItem className="grid gap-1 relative pb-4">
+                      <FormLabel>Crops (comma separated)</FormLabel>
+                      <FormControl><Input placeholder="e.g. Wheat, Rice" {...field} /></FormControl>
+                      <div className="absolute -bottom-1 left-0"><FormMessage className="text-[11px]" /></div>
+                    </FormItem>
+                  )} />
+
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="crops">Crops (comma separated)</Label>
-                  <Input
-                    id="crops"
-                    value={formData.crops}
-                    onChange={(e) => setFormData({ ...formData, crops: e.target.value })}
-                    placeholder="e.g. Wheat, Rice, Cotton"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={formLoading}>
-                  {formLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {editingId ? 'Update' : 'Create'}
-                </Button>
-              </DialogFooter>
-            </form>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={formLoading}>
+                    {formLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {editingId ? 'Update' : 'Create'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
 

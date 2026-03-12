@@ -21,10 +21,10 @@ const getAllFertilizers = async (req, res) => {
       .select('-__v')
       .sort({ createdAt: -1 });
     
-    res.json({ fertilizers, count: fertilizers.length });
+    res.json({ success: true, fertilizers, count: fertilizers.length });
   } catch (error) {
     console.error('Get Fertilizers error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -39,13 +39,13 @@ const getFertilizerById = async (req, res) => {
     });
     
     if (!fertilizer) {
-      return res.status(404).json({ message: 'Fertilizer not found' });
+      return res.status(404).json({ success: false, message: 'Fertilizer not found' });
     }
     
-    res.json(fertilizer);
+    res.json({ success: true, data: fertilizer });
   } catch (error) {
     console.error('Get Fertilizer error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -81,13 +81,13 @@ const addFertilizer = async (req, res) => {
     } = req.body;
 
     if (!req.user || !req.user._id) {
-        return res.status(401).json({ message: 'User context missing' });
+        return res.status(401).json({ success: false, message: 'User context missing' });
     }
     
     // Check if fertilizer already exists
     const existingFertilizer = await Fertilizer.findOne({ name });
     if (existingFertilizer) {
-      return res.status(400).json({ message: 'Fertilizer with this name already exists' });
+      return res.status(400).json({ success: false, message: 'Fertilizer with this name already exists' });
     }
     
     // Get image filename if uploaded
@@ -127,22 +127,23 @@ const addFertilizer = async (req, res) => {
       io.emit('fertilizer_added', fertilizer);
     }
     
-    res.status(201).json(fertilizer);
+    res.status(201).json({ success: true, data: fertilizer });
   } catch (error) {
     console.error('Add Fertilizer error:', error);
     
     // Handle Mongoose Validation Errors
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map(val => val.message);
-      return res.status(400).json({ message: 'Validation Error', errors: messages });
+      return res.status(400).json({ success: false, message: 'Validation Error', errors: messages });
     }
     
     // Handle Duplicate Key Errors
     if (error.code === 11000) {
-       return res.status(400).json({ message: 'Duplicate field value entered' });
+       return res.status(400).json({ success: false, message: 'Duplicate field value entered' });
     }
 
     res.status(500).json({ 
+        success: false,
         message: 'Server error', 
         error: error.message,
         errorName: error.name
@@ -158,12 +159,12 @@ const updateFertilizer = async (req, res) => {
     const fertilizer = await Fertilizer.findById(req.params.id);
     
     if (!fertilizer) {
-      return res.status(404).json({ message: 'Fertilizer not found' });
+      return res.status(404).json({ success: false, message: 'Fertilizer not found' });
     }
 
     if (!req.user || !req.user._id) {
         console.error('User not found in request (Auth issue?)');
-        return res.status(401).json({ message: 'User context missing' });
+        return res.status(401).json({ success: false, message: 'User context missing' });
     }
     
     const {
@@ -225,9 +226,8 @@ const updateFertilizer = async (req, res) => {
     if (precautions) fertilizer.precautions = precautions;
     if (organic !== undefined) fertilizer.organic = organic === 'true' || organic === true;
     
-    console.log('Update Body:', req.body);
-    
     await fertilizer.save();
+
     
     // Log activity
     await AdminActivityLog.create({
@@ -242,7 +242,7 @@ const updateFertilizer = async (req, res) => {
       io.emit('fertilizer_updated', fertilizer);
     }
     
-    res.json(fertilizer);
+    res.json({ success: true, data: fertilizer });
   } catch (error) {
     console.error('Update Fertilizer error DETAILS:', error);
     console.error('Stack:', error.stack);
@@ -250,12 +250,12 @@ const updateFertilizer = async (req, res) => {
     // Handle Mongoose Validation Errors
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map(val => val.message);
-      return res.status(400).json({ message: 'Validation Error', errors: messages });
+      return res.status(400).json({ success: false, message: 'Validation Error', errors: messages });
     }
     
     // Handle Duplicate Key Errors
     if (error.code === 11000) {
-       return res.status(400).json({ message: 'Duplicate field value entered' });
+       return res.status(400).json({ success: false, message: 'Duplicate field value entered' });
     }
 
     res.status(500).json({ 
@@ -275,7 +275,7 @@ const toggleFertilizerStatus = async (req, res) => {
     const fertilizer = await Fertilizer.findById(req.params.id);
     
     if (!fertilizer) {
-      return res.status(404).json({ message: 'Fertilizer not found' });
+      return res.status(404).json({ success: false, message: 'Fertilizer not found' });
     }
     
     fertilizer.isActive = !fertilizer.isActive;
@@ -301,7 +301,7 @@ const toggleFertilizerStatus = async (req, res) => {
     res.json({ message: `Fertilizer ${fertilizer.isActive ? 'activated' : 'deactivated'} successfully`, isActive: fertilizer.isActive });
   } catch (error) {
     console.error('Toggle Fertilizer Status error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -314,10 +314,10 @@ const getAllFertilizersAdmin = async (req, res) => {
       .select('-__v')
       .sort({ createdAt: -1 });
     
-    res.json({ fertilizers, count: fertilizers.length });
+    res.json({ success: true, fertilizers, count: fertilizers.length });
   } catch (error) {
     console.error('Get All Fertilizers Admin error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 

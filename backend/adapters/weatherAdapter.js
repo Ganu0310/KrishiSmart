@@ -1,36 +1,51 @@
-const axios = require('axios');
+const { request } = require('undici');
 
-/**
- * Weather Adapter - Fetches weather data from OpenWeather API
- * Returns null on failure (never throws)
- */
+const WEATHER_UNION_API_KEY = process.env.WEATHER_UNION_API_KEY;
+
+// Mapping known cities to their approx coords since WeatherUnion's external API operates on lat/lon
+const CITY_COORDS = {
+  'nashik': { lat: 19.9975, lng: 73.7898 },
+  'pune': { lat: 18.5204, lng: 73.8567 },
+  'mumbai': { lat: 19.0760, lng: 72.8777 },
+  'nagpur': { lat: 21.1458, lng: 79.0882 },
+  'aurangabad': { lat: 19.8762, lng: 75.3433 },
+};
+
 const fetchWeatherData = async (location) => {
   try {
-    const apiKey = process.env.OPENWEATHER_API_KEY;
-    if (!apiKey) {
-      console.error('OpenWeather API key not configured');
+    const defaultCoords = CITY_COORDS['nashik'];
+    const coords = CITY_COORDS[location?.toLowerCase().trim()] || defaultCoords;
+
+    const weatherUrl = `https://www.weatherunion.com/gw/weather/external/v0/get_weather_data?latitude=${coords.lat}&longitude=${coords.lng}`;
+    
+    const { statusCode, body } = await request(weatherUrl, {
+      headers: {
+        'x-zomato-api-key': WEATHER_UNION_API_KEY,
+      },
+      headersTimeout: 10000,
+    });
+
+    if (statusCode !== 200) {
+      console.error(`WeatherUnion API failed with status ${statusCode}`);
       return null;
     }
 
-    const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(
-      location
-    )}&appid=${apiKey}&units=metric`;
+    const res = await body.json();
+    const data = res.locality_weather_data;
 
-    const { data } = await axios.get(url, { timeout: 10000 });
-
-    // Use the first forecast entry
-    const first = data.list && data.list[0];
-    if (!first) {
-      console.error('Unable to parse weather data for', location);
+    if (!data) {
+      console.error('Unable to parse WeatherUnion data for', location);
       return null;
     }
 
-    const rainfall = (first.rain && (first.rain['3h'] || first.rain['1h'])) || 0;
-    const temperature = first.main.temp;
-    const humidity = first.main.humidity || 50;
-    const windSpeed = (first.wind && first.wind.speed) || 0;
-    const weatherDescription =
-      (first.weather && first.weather[0] && first.weather[0].description) || '';
+    // WeatherUnion data parsing. They return null for missing sensor data sometimes.
+    const rainfall = data.rain_intensity || 0;
+    const temperature = data.temperature || 30; // Fallback to 30 if null
+    const humidity = data.humidity || 50; // Fallback to 50 if null
+    const windSpeed = data.wind_speed || 0;
+    
+    // WeatherUnion v0 API doesn't provide string descriptions/codes currently
+    const weatherDescription = rainfall > 0 ? 'rain' : (humidity > 70 ? 'cloudy' : 'clear sky');
 
     // Generate warning based on conditions
     let warning = '';

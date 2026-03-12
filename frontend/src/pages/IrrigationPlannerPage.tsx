@@ -1,6 +1,5 @@
 import { useState } from "react";
 import AppLayout from "@/components/AppLayout";
-import { mockIrrigationResult } from "@/services/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +21,7 @@ export default function IrrigationPlannerPage() {
   const [area, setArea] = useState("2");
   const [soilType, setSoilType] = useState("loamy");
   const [moisture, setMoisture] = useState("40");
-  const [result, setResult] = useState(mockIrrigationResult);
+  const [result, setResult] = useState({ waterNeeded: 0, schedule: "", nextIrrigation: "", efficiency: 0 });
   const [calculated, setCalculated] = useState(false);
 
   const handleCalculate = () => {

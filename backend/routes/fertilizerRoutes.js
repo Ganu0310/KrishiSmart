@@ -11,16 +11,17 @@ const {
 const { authMiddleware, adminOnly } = require('../middleware/authMiddleware');
 const upload = require('../config/multerConfig');
 
-// Public routes
+// ── Public routes ─────────────────────────────────────
 router.get('/', getAllFertilizers);
+
+// ── Admin routes (protected) ──────────────────────────
+// These must come BEFORE /:id to prevent /:id from catching "admin" as a param
+router.get('/admin/all', authMiddleware, adminOnly, getAllFertilizersAdmin);
+router.post('/admin/add', authMiddleware, adminOnly, upload.single('image'), addFertilizer);
+router.put('/admin/:id', authMiddleware, adminOnly, upload.single('image'), updateFertilizer);
+router.patch('/admin/:id/status', authMiddleware, adminOnly, toggleFertilizerStatus);
+
+// ── Public: single fertilizer (MUST be last — /:id is a catch-all param) ──
 router.get('/:id', getFertilizerById);
-
-// Admin routes (protected)
-router.use(authMiddleware, adminOnly);
-
-router.get('/admin/all', getAllFertilizersAdmin);
-router.post('/admin/add', upload.single('image'), addFertilizer);
-router.put('/admin/:id', upload.single('image'), updateFertilizer);
-router.patch('/admin/:id/status', toggleFertilizerStatus);
 
 module.exports = router;

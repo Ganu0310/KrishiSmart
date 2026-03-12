@@ -1,0 +1,457 @@
+# KrishiSmart — Project Roadmap & Feature Design Document
+
+> **Last Updated:** March 4, 2026  
+> **Stack:** Node.js/Express + MongoDB (Backend) • React/TypeScript + TailwindCSS + Shadcn UI (Frontend)
+
+---
+
+## 1. Current Feature Inventory
+
+| # | Feature | Backend | Frontend | Status |
+|---|---------|---------|----------|--------|
+| 1 | **Authentication** (Login/Register) | [authController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/authController.js) • JWT + bcrypt | [LoginPage.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/pages/LoginPage.tsx) | ✅ Live |
+| 2 | **Farmer Dashboard** | Weather + Advisory APIs | [FarmerDashboard.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/pages/FarmerDashboard.tsx) | ✅ Live |
+| 3 | **Crop Advisory** (AI + Rule-based fallback) | [advisoryController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/advisoryController.js) • Gemini + MongoDB cache | [CropAdvisoryPage.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/pages/CropAdvisoryPage.tsx) | ✅ Live |
+| 4 | **Market Prices** (Live Agmarknet) | [marketPriceController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/marketPriceController.js) | [MarketPage.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/pages/MarketPage.tsx) | ✅ Live |
+| 5 | **Market Trends** (Charts) | [marketTrendController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/marketTrendController.js) | Integrated in MarketPage | ✅ Live |
+| 6 | **Weather Forecast** (7-day) | [forecastController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/forecastController.js) • WeatherUnion API | [WeatherForecastPage.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/pages/WeatherForecastPage.tsx) | ✅ Live |
+| 7 | **Irrigation Planner** | [irrigationController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/irrigationController.js) | [IrrigationPlannerPage.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/pages/IrrigationPlannerPage.tsx) | ✅ Live |
+| 8 | **Fertilizer Catalog** (CRUD) | [fertilizerController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/fertilizerController.js) • multer images | [FertilizersPage.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/pages/FertilizersPage.tsx) + Detail | ✅ Live |
+| 9 | **Pest Risk Assessment** | [advisoryController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/advisoryController.js) + [pestRiskEngine.js](file:///c:/c/Web%20Project/KrishiSmart/backend/utils/pestRiskEngine.js) | [PestRiskPage.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/pages/PestRiskPage.tsx) | ✅ Live |
+| 10 | **Government Schemes Finder** | [schemeController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/schemeController.js) | [SchemesPage.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/pages/SchemesPage.tsx) | ✅ Live |
+| 11 | **Sowing Calendar** | [sowingController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/sowingController.js) | Integrated in Dashboard | ✅ Live |
+| 12 | **User Profile** (Edit + Photo) | [userController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/userController.js) • multer | [ProfilePage.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/pages/ProfilePage.tsx) | ✅ Live |
+| 13 | **Admin Panel** (Dashboard, Users, CMS) | [adminController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/adminController.js) | `admin/*.tsx` (6 pages) | ✅ Live |
+| 14 | **Real-time Updates** (Socket.io) | [server.js](file:///c:/c/Web%20Project/KrishiSmart/backend/server.js) • Socket rooms | `SocketContext.tsx` | ✅ Live |
+| 15 | **Background Jobs** (Cron) | `jobs/` • Weather, Market, Soil refresh | N/A | ✅ Live |
+| 16 | **🆕 Multilingual (Hindi/English)** | N/A | `i18n/` + [LanguageToggle.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/components/LanguageToggle.tsx) | ✅ Live |
+| 17 | **🆕 AI Chatbot (KrishiBot)** | [chatbotController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/chatbotController.js) • Gemini 2.0 | [ChatbotWidget.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/components/ChatbotWidget.tsx) | ✅ Live |
+| 18 | **🆕 Crop Disease Identifier** | [diseaseController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/diseaseController.js) • Gemini Vision | [DiseaseIdentifierPage.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/pages/DiseaseIdentifierPage.tsx) | ✅ Live |
+| 19 | **🆕 Advisory Caching (MongoDB)** | [AdvisoryCache.js](file:///c:/c/Web%20Project/KrishiSmart/backend/models/AdvisoryCache.js) model • 6h TTL | N/A | ✅ Live |
+
+---
+
+## 2. Missing Features — Prioritized Roadmap
+
+### 🔴 P0 — Critical (Must-Have for Production)
+
+---
+
+#### 2.1 Forgot Password / Password Reset
+
+**Why:** Users who forget their password are permanently locked out. This is a basic auth requirement.
+
+**Design:**
+
+```
+Flow: Login Page → "Forgot Password?" → Enter Email → OTP sent → Verify OTP → Set New Password
+```
+
+**Backend:**
+| File | Description |
+|---|---|
+| `models/OTP.js` | Schema: `{ email, otp, expiresAt }` with TTL index (5 min) |
+| [controllers/authController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/authController.js) | Add: `forgotPassword()`, `verifyOTP()`, `resetPassword()` |
+| `utils/emailService.js` | Nodemailer config (Gmail SMTP or Resend API) |
+
+```
+Schema: OTP
+─────────────────────────────
+email       String (indexed)
+otp         String (6-digit)
+expiresAt   Date (TTL: 5 min)
+createdAt   Date
+```
+
+**API Endpoints:**
+```
+POST /api/auth/forgot-password    { email }          → sends OTP to email
+POST /api/auth/verify-otp         { email, otp }     → returns temp token
+POST /api/auth/reset-password     { token, password } → updates password
+```
+
+**Frontend:**
+| File | Description |
+|---|---|
+| `pages/ForgotPasswordPage.tsx` | 3-step form: Email → OTP → New Password |
+| [services/api.ts](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/services/api.ts) | Add `authApi.forgotPassword()`, `authApi.verifyOTP()`, `authApi.resetPassword()` |
+
+**Dependencies:** `npm install nodemailer` (backend)
+
+---
+
+#### 2.2 Email Verification on Registration
+
+**Why:** Prevents fake accounts, ensures contact validity.
+
+**Design:**
+```
+Flow: Register → Account created (unverified) → Email with OTP → Verify → Account activated
+```
+
+**Backend:**
+| Change | Description |
+|---|---|
+| [models/User.js](file:///c:/c/Web%20Project/KrishiSmart/backend/models/User.js) | Add field: `isEmailVerified: { type: Boolean, default: false }` |
+| [controllers/authController.js](file:///c:/c/Web%20Project/KrishiSmart/backend/controllers/authController.js) | Send OTP on register, add `verifyEmail()` handler |
+| [middleware/authMiddleware.js](file:///c:/c/Web%20Project/KrishiSmart/backend/middleware/authMiddleware.js) | Optionally block unverified users from protected routes |
+
+**Frontend:**
+| File | Description |
+|---|---|
+| `pages/VerifyEmailPage.tsx` | OTP input form shown after registration |
+| Redirect from [LoginPage.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/pages/LoginPage.tsx) | If `isEmailVerified === false`, redirect to verify page |
+
+---
+
+#### 2.3 Input Validation & Error Handling (Global)
+
+**Why:** Many endpoints lack server-side validation. `express-validator` is installed but underused.
+
+**Design:**
+| Area | Fix |
+|---|---|
+| All auth routes | Validate email format, password strength (min 8 chars, mixed case) |
+| Advisory routes | Validate crop/stage against allowed enums |
+| File uploads | Validate MIME type + file size server-side (not just multer) |
+| Frontend forms | Add `zod` schemas for all forms (already installed) |
+
+---
+
+### 🟡 P1 — High Priority (Complete Before Launch)
+
+---
+
+#### 2.4 Notification System (In-App + Push)
+
+**Why:** Farmers need alerts for weather warnings, price changes, new advisories, scheme deadlines.
+
+**Design:**
+
+```
+Schema: Notification
+─────────────────────────────
+userId      ObjectId (ref: User)
+type        Enum: 'weather_alert' | 'price_alert' | 'advisory' | 'scheme' | 'admin_broadcast'
+title       String
+message     String
+isRead      Boolean (default: false)
+link        String (optional deep link)
+createdAt   Date
+```
+
+**Backend:**
+| File | Description |
+|---|---|
+| `models/Notification.js` | Schema as above |
+| `controllers/notificationController.js` | `getNotifications()`, `markRead()`, `markAllRead()` |
+| `routes/notificationRoutes.js` | `GET /api/notifications`, `PATCH /api/notifications/:id/read` |
+| Background jobs | Auto-create notifications on price spikes, weather alerts |
+| Socket.io | Emit `new_notification` event to farmer's room in real-time |
+
+**Frontend:**
+| Component | Description |
+|---|---|
+| `components/NotificationBell.tsx` | Bell icon in Navbar with unread badge count |
+| `components/NotificationPanel.tsx` | Slide-out panel listing recent notifications |
+| Sound | Optional notification sound on new alert |
+
+---
+
+#### 2.5 Export Data (PDF / CSV)
+
+**Why:** Farmers and admins need to save, print, and share reports.
+
+**Design:**
+
+| Export From | Format | Library |
+|---|---|---|
+| Market Prices table | CSV | `json2csv` (backend) or client-side `Blob` |
+| Advisory report | PDF | `jspdf` + `html2canvas` (frontend) |
+| Admin user report | CSV | Backend endpoint `GET /api/admin/users/export` |
+| Farm expense log (future) | CSV/PDF | Both |
+
+**Frontend:**
+| Component | Description |
+|---|---|
+| `components/ExportButton.tsx` | Reusable button with dropdown: PDF / CSV |
+| Integration | Add to MarketPage, AdminUsers, Advisory results |
+
+---
+
+#### 2.6 Price Alerts (Target Price Notifications)
+
+**Why:** Farmers want to sell when price reaches their target.
+
+**Design:**
+
+```
+Schema: PriceAlert
+─────────────────────────────
+userId       ObjectId (ref: User)
+crop         String
+targetPrice  Number
+direction    Enum: 'above' | 'below'
+isActive     Boolean (default: true)
+triggered    Boolean (default: false)
+triggeredAt  Date
+createdAt    Date
+```
+
+**Backend:**
+| File | Description |
+|---|---|
+| `models/PriceAlert.js` | Schema as above |
+| `controllers/priceAlertController.js` | CRUD: create, list, delete alerts |
+| `jobs/priceAlertJob.js` | Runs after market price refresh → checks all active alerts → triggers notifications |
+
+**Frontend:**
+| Component | Description |
+|---|---|
+| `components/SetPriceAlert.tsx` | Modal: select crop, enter target price, choose above/below |
+| Integration in [MarketPage.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/pages/MarketPage.tsx) | "Set Alert" button next to each crop price |
+
+---
+
+#### 2.7 Farm Profile / Multi-Farm Support
+
+**Why:** Many farmers manage multiple fields with different crops, soils, and sizes.
+
+**Design:**
+
+```
+Schema: Farm
+─────────────────────────────
+userId        ObjectId (ref: User)
+name          String ("Plot A", "River Field")
+location      String
+area          Number (acres)
+soilType      String
+crops         [String]
+irrigationType String
+isDefault     Boolean
+createdAt     Date
+```
+
+**Backend:**
+- `models/Farm.js` — schema as above
+- `controllers/farmController.js` — CRUD operations
+- All advisory/irrigation/weather APIs accept optional `farmId` parameter
+
+**Frontend:**
+- `pages/FarmsPage.tsx` — list/add/edit farms
+- Dashboard farm selector dropdown — switch between farms
+
+---
+
+### 🟠 P2 — Medium Priority (Post-Launch Enhancements)
+
+---
+
+#### 2.8 Dark Mode Toggle
+
+**Design:** Already have `next-themes` installed. Just need:
+- Add `<ThemeProvider>` wrapper in [App.tsx](file:///c:/c/Web%20Project/KrishiSmart/frontend/src/App.tsx)
+- Add Sun/Moon toggle in Navbar next to LanguageToggle
+- Tailwind `dark:` classes already work with Shadcn UI
+
+---
+
+#### 2.9 Crop Calendar / Planner
+
+**Design:**
+- Visual monthly calendar showing sowing → vegetative → flowering → harvest timeline
+- Auto-populated from sowing calendar API data
+- User can add custom events (spray schedule, market day)
+- Component: `pages/CropCalendarPage.tsx` using a calendar library like `react-big-calendar`
+
+---
+
+#### 2.10 Expense & Income Tracker (Farm Ledger)
+
+**Design:**
+
+```
+Schema: Transaction
+─────────────────────────────
+userId      ObjectId
+farmId      ObjectId (optional)
+type        Enum: 'expense' | 'income'
+category    Enum: 'seeds' | 'fertilizer' | 'labour' | 'pesticide' | 'equipment' | 'harvest_sale' | 'other'
+amount      Number
+description String
+date        Date
+crop        String (optional)
+createdAt   Date
+```
+
+**Frontend:**
+- `pages/FarmLedgerPage.tsx` — table + chart view
+- Monthly/seasonal summary with pie chart (expenses) and bar chart (income vs expenses)
+- Export to CSV
+
+---
+
+#### 2.11 Community Forum
+
+**Design:**
+
+```
+Schema: ForumPost
+─────────────────────────────
+authorId    ObjectId (ref: User)
+title       String
+body        String
+category    Enum: 'question' | 'tip' | 'showcase' | 'market_info'
+crop        String (optional)
+likes       [ObjectId]
+replies     [{ authorId, body, createdAt }]
+createdAt   Date
+```
+
+**Frontend:**
+- `pages/CommunityPage.tsx` — feed of posts with filters
+- Post detail with replies
+- "Ask KrishiBot" button next to each question for AI answer
+
+---
+
+#### 2.12 Soil Health Tracker
+
+**Design:**
+- Log soil test results: N, P, K, pH, organic carbon, EC
+- Compare across seasons
+- Auto-recommendation: "Your soil needs more Potassium based on last test"
+- Integrates with existing `SoilCondition` model
+
+---
+
+### 🟢 P3 — Low Priority (Future Vision)
+
+---
+
+#### 2.13 Progressive Web App (PWA) / Offline Mode
+
+**Design:**
+- Add `manifest.json` + service worker via `vite-plugin-pwa`
+- Cache critical pages (dashboard, advisory) for offline viewing
+- Queue API requests when offline, sync when back online
+- **Big impact** for rural areas with spotty internet
+
+---
+
+#### 2.14 Satellite Crop Monitoring (NDVI)
+
+**Design:**
+- Integrate NASA/Sentinel-2 satellite NDVI data
+- Show field health map (green = healthy, red = stressed)
+- Requires farm GPS coordinates (from Farm Profile feature)
+- API: Sentinel Hub or Google Earth Engine
+
+---
+
+#### 2.15 Predictive Market Pricing (ML)
+
+**Design:**
+- Train a model on historical Agmarknet data (already collecting)
+- Predict next 7/30 day prices per crop per mandi
+- Display as forecast chart alongside actual trend
+- Could use TensorFlow.js or a Python microservice
+
+---
+
+#### 2.16 IoT Sensor Integration
+
+**Design:**
+- MQTT broker for soil moisture, temperature sensors
+- Real-time dashboard with sensor readings
+- Auto-trigger irrigation alerts when moisture drops below threshold
+- Requires hardware (ESP32 + sensors)
+
+---
+
+## 3. Implementation Timeline
+
+```mermaid
+gantt
+    title KrishiSmart Development Roadmap
+    dateFormat  YYYY-MM-DD
+    
+    section Sprint 1 (P0 - Critical)
+    Forgot Password & Reset       :s1a, 2026-03-05, 2d
+    Email Verification             :s1b, after s1a, 1d
+    Global Validation Hardening    :s1c, after s1b, 1d
+    
+    section Sprint 2 (P1 - High)
+    Notification System            :s2a, after s1c, 3d
+    Price Alerts                   :s2b, after s2a, 2d
+    Export (PDF/CSV)               :s2c, after s2b, 1d
+    Farm Profile / Multi-Farm      :s2d, after s2c, 2d
+    
+    section Sprint 3 (P2 - Medium)
+    Dark Mode                      :s3a, after s2d, 1d
+    Crop Calendar                  :s3b, after s3a, 2d
+    Expense Tracker                :s3c, after s3b, 2d
+    Community Forum                :s3d, after s3c, 3d
+    
+    section Sprint 4 (P3 - Vision)
+    PWA / Offline Mode             :s4a, after s3d, 3d
+    Satellite Monitoring           :s4b, after s4a, 5d
+    Predictive Pricing             :s4c, after s4b, 5d
+```
+
+---
+
+## 4. Tech Stack Summary
+
+| Layer | Technology | Notes |
+|---|---|---|
+| **Backend** | Node.js + Express 5 | REST API |
+| **Database** | MongoDB + Mongoose 9 | TTL indexes, aggregation pipelines |
+| **Auth** | JWT + bcrypt | 7-day token expiry |
+| **AI** | Google Gemini 2.0 Flash | Advisory, Chatbot, Disease ID |
+| **Real-time** | Socket.io | Admin broadcasts, notifications |
+| **File Upload** | Multer | Profile pics, fertilizer images, disease photos |
+| **Background Jobs** | node-cron | Weather, market, soil data refresh |
+| **Frontend** | React 18 + TypeScript | Vite bundler |
+| **UI Library** | Shadcn UI + Radix | 50+ components |
+| **Styling** | TailwindCSS 3 | Dark mode ready |
+| **Charts** | Recharts | Market trends, dashboard stats |
+| **i18n** | i18next | Hindi + English |
+| **State** | React Query + Context | Server state + auth state |
+| **Email** | Nodemailer *(to add)* | OTP, password reset |
+| **Export** | jsPDF + json2csv *(to add)* | Reports |
+
+---
+
+## 5. Quick Reference — File Architecture
+
+```
+KrishiSmart/
+├── backend/
+│   ├── config/         db.js
+│   ├── controllers/    14 controllers (auth, admin, advisory, chatbot, disease, etc.)
+│   ├── middleware/      authMiddleware, requestLogger, errorHandler
+│   ├── models/          11 models (User, Fertilizer, MarketPrice, AdvisoryCache, etc.)
+│   ├── routes/          12 route files
+│   ├── jobs/            Cron jobs (weather, market, soil refresh)
+│   ├── adapters/        External API adapters
+│   ├── services/        Business logic services
+│   ├── utils/           advisoryRules, pestRiskEngine, weatherCache, etc.
+│   └── server.js        Express + Socket.io entry point
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/  layout/ (Navbar, AdminLayout) + ui/ (52 Shadcn components)
+│   │   ├── contexts/    AuthContext
+│   │   ├── context/     SocketContext
+│   │   ├── i18n/        index.ts + locales/ (en.json, hi.json)
+│   │   ├── pages/       14 farmer pages + 7 admin pages
+│   │   ├── services/    api.ts (centralized API client)
+│   │   └── App.tsx      Routing + ProtectedRoute
+│   └── index.html
+│
+└── package.json         Root workspace
+```
+
+This document serves as the living roadmap. Features should be implemented in priority order (P0 → P1 → P2 → P3).

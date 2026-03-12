@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const AdminActivityLog = require('../models/AdminActivityLog');
 const Fertilizer = require('../models/Fertilizer');
+const WeatherCache = require('../models/WeatherCache');
 const bcrypt = require('bcrypt');
 
 // @desc    Get dashboard statistics
@@ -24,8 +25,9 @@ const getStats = async (req, res) => {
             { $group: { _id: '$crops', count: { $sum: 1 } } },
         ]);
 
-        const weatherRequests = 1250; // Mock or pull from logs if we had them
-        
+        // Real weather cache count (locations being tracked)
+        const weatherCachedLocations = await WeatherCache.countDocuments();
+
         // Fertilizer stats
         const totalFertilizers = await Fertilizer.countDocuments({ isActive: true });
 
@@ -35,7 +37,7 @@ const getStats = async (req, res) => {
             suspendedUsers,
             onlineUsers,
             cropDistribution: cropDist,
-            weatherRequests,
+            weatherCachedLocations,
             totalFertilizers,
         });
     } catch (error) {

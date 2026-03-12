@@ -5,14 +5,15 @@ const path = require('path');
 // GET /api/user/profile
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('-password');
+    // req.user is populated by authMiddleware as the full User document
+    const user = await User.findById(req.user._id).select('-password');
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
-    res.json(user);
+    res.json({ success: true, user });
   } catch (error) {
     console.error('Get profile error:', error.message);
-    res.status(500).json({ message: 'Server error fetching profile' });
+    res.status(500).json({ success: false, message: 'Server error fetching profile' });
   }
 };
 
@@ -20,11 +21,11 @@ const getProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const { name, mobile, location, farmSize, address, crops } = req.body;
-    const userId = req.user.userId;
+    const userId = req.user._id; // Fixed: was req.user.userId (wrong field)
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
 
     // Update text fields if provided
@@ -33,24 +34,20 @@ const updateProfile = async (req, res) => {
     if (location) user.location = location;
     if (farmSize) user.farmSize = Number(farmSize);
     if (address) user.address = address.trim();
-    
+
     // Handle crops array properly (parse if it comes as stringified JSON from FormData)
     if (crops) {
-        try {
-            // Check if crops is a string (JSON stringified) or already an array
-            const parsedCrops = typeof crops === 'string' ? JSON.parse(crops) : crops;
-            if (Array.isArray(parsedCrops)) {
-                user.crops = parsedCrops;
-            }
-        } catch (e) {
-            console.error("Error parsing crops:", e);
-             // Verify if it's a single crop string or comma separated
-            if (typeof crops === 'string' && !crops.startsWith('[')) {
-                user.crops = crops.split(',').map(c => c.trim());
-            }
+      try {
+        const parsedCrops = typeof crops === 'string' ? JSON.parse(crops) : crops;
+        if (Array.isArray(parsedCrops)) {
+          user.crops = parsedCrops;
         }
+      } catch (e) {
+        if (typeof crops === 'string' && !crops.startsWith('[')) {
+          user.crops = crops.split(',').map((c) => c.trim());
+        }
+      }
     }
-
 
     // Handle file upload
     if (req.file) {
@@ -61,23 +58,21 @@ const updateProfile = async (req, res) => {
           fs.unlinkSync(oldPath);
         }
       }
-      // Save relative path
-      // Normalize path separators to forward slashes for URL usage
       user.profilePicture = req.file.path.replace(/\\/g, '/');
     }
 
     await user.save();
 
-    // Return updated user without password
     const updatedUser = await User.findById(userId).select('-password');
-    
+
     res.json({
+      success: true,
       message: 'Profile updated successfully',
       user: updatedUser,
     });
   } catch (error) {
     console.error('Update profile error:', error.message);
-    res.status(500).json({ message: 'Server error updating profile' });
+    res.status(500).json({ success: false, message: 'Server error updating profile' });
   }
 };
 

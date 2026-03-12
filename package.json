@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node backend/server.js",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:ml": "python backend/ml/server.py",
+    "dev": "concurrently \"npm:dev:backend\" \"npm:dev:frontend\" \"npm:dev:ml\"",
+    "install:all": "npm install && cd backend && npm install && pip install -r ml/requirements.txt && cd ../frontend && npm install && cd .."
   },
   "keywords": [],
   "author": "",
@@ -17,5 +22,8 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.2.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }

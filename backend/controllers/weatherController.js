@@ -1,9 +1,10 @@
-const { getCurrentWeather } = require('../services/weatherService');
+const { getCurrentWeather, fetchAndCacheWeather } = require('../services/weatherService');
 const { query, validationResult } = require('express-validator');
 
 /**
- * GET /api/weather/current?location=Nashik
- * Serve weather data from MongoDB cache (populated by background job)
+ * GET /api/gov-data/weather/current?location=Nashik
+ * Serve weather data from MongoDB cache (populated by background job).
+ * Falls back to a live WeatherUnion fetch if the cache is empty.
  */
 const getWeather = [
   // Validation
@@ -28,7 +29,16 @@ const getWeather = [
       }
 
       const location = req.query.location || process.env.DEFAULT_LOCATION || 'Nashik';
-      const result = await getCurrentWeather(location);
+      let result = await getCurrentWeather(location);
+
+      // If no data in cache, fetch live and cache it now
+      if (!result.success) {
+        console.log(`[Weather] No cache for "${location}", fetching live from WeatherUnion...`);
+        const fetched = await fetchAndCacheWeather(location);
+        if (fetched) {
+          result = await getCurrentWeather(location);
+        }
+      }
 
       if (!result.success) {
         return res.status(404).json(result);

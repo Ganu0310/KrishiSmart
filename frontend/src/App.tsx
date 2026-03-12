@@ -7,9 +7,13 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { SocketProvider } from "@/context/SocketContext";
 
 import LoginPage from "./pages/LoginPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import FarmerDashboard from "./pages/FarmerDashboard";
 import CropAdvisoryPage from "./pages/CropAdvisoryPage";
-import MarketPricesPage from "./pages/MarketPricesPage";
+import MarketPage from "./pages/MarketPage";
+import WeatherForecastPage from "./pages/WeatherForecastPage";
+import PestRiskPage from "./pages/PestRiskPage";
+import SchemesPage from "./pages/SchemesPage";
 import IrrigationPlannerPage from "./pages/IrrigationPlannerPage";
 import FertilizersPage from "./pages/FertilizersPage";
 import FertilizerDetailPage from "./pages/FertilizerDetailPage";
@@ -21,6 +25,11 @@ import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminFertilizers from "@/pages/admin/AdminFertilizers";
 import GovDataDashboard from "@/pages/admin/GovDataDashboard";
 import MarketPricesAdmin from "@/pages/admin/MarketPricesAdmin";
+import Navbar from "@/components/layout/Navbar";
+import LandingPage from "@/pages/LandingPage";
+import AdminLayout from "@/components/layout/AdminLayout";
+import AdminContent from "@/pages/admin/AdminContent";
+import DiseaseIdentifierPage from "@/pages/DiseaseIdentifierPage";
 
 const queryClient = new QueryClient();
 
@@ -30,47 +39,44 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-import Navbar from "@/components/layout/Navbar";
-import LandingPage from "@/pages/LandingPage";
-import AdminLayout from "@/components/layout/AdminLayout";
-import AdminContent from "@/pages/admin/AdminContent";
-
 const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
-
-  // Use useLocation to potentially hide navbar on specific pages if needed
-  // For now, show everywhere
 
   return (
     <>
       <Navbar />
       <Routes>
-        {/* Public Routes */}
+        {/* Public */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <LoginPage />} />
+        <Route path="/forgot-password" element={isAuthenticated ? <Navigate to="/dashboard" /> : <ForgotPasswordPage />} />
 
-        {/* Farmer Routes */}
-        <Route path="/dashboard" element={<ProtectedRoute><FarmerDashboard /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        <Route path="/advisory" element={<ProtectedRoute><CropAdvisoryPage /></ProtectedRoute>} />
-        <Route path="/prices" element={<ProtectedRoute><MarketPricesPage /></ProtectedRoute>} />
-        <Route path="/irrigation" element={<ProtectedRoute><IrrigationPlannerPage /></ProtectedRoute>} />
-        <Route path="/fertilizers" element={<ProtectedRoute><FertilizersPage /></ProtectedRoute>} />
+        {/* Farmer */}
+        <Route path="/dashboard"      element={<ProtectedRoute><FarmerDashboard /></ProtectedRoute>} />
+        <Route path="/profile"        element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/advisory"       element={<ProtectedRoute><CropAdvisoryPage /></ProtectedRoute>} />
+        <Route path="/prices"         element={<ProtectedRoute><MarketPage /></ProtectedRoute>} />
+        <Route path="/market-trend"   element={<Navigate to="/prices" replace />} />
+        <Route path="/irrigation"     element={<ProtectedRoute><IrrigationPlannerPage /></ProtectedRoute>} />
+        <Route path="/fertilizers"    element={<ProtectedRoute><FertilizersPage /></ProtectedRoute>} />
         <Route path="/fertilizers/:id" element={<ProtectedRoute><FertilizerDetailPage /></ProtectedRoute>} />
+        <Route path="/forecast"       element={<ProtectedRoute><WeatherForecastPage /></ProtectedRoute>} />
+        <Route path="/pest-risk"      element={<ProtectedRoute><PestRiskPage /></ProtectedRoute>} />
+        <Route path="/schemes"        element={<ProtectedRoute><SchemesPage /></ProtectedRoute>} />
+        <Route path="/disease"        element={<ProtectedRoute><DiseaseIdentifierPage /></ProtectedRoute>} />
 
-        {/* Admin Routes with Layout */}
-        <Route path="/admin" element={<Navigate to="/admin/login" />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="users" element={<AdminUsers />} />
-          <Route path="content" element={<AdminContent />} />
-          <Route path="fertilizers" element={<AdminFertilizers />} />
-          <Route path="gov-data" element={<GovDataDashboard />} />
+        {/* Admin */}
+        <Route path="/admin"          element={<Navigate to="/admin/login" />} />
+        <Route path="/admin/login"    element={<AdminLogin />} />
+        <Route path="/admin"          element={<AdminLayout />}>
+          <Route path="dashboard"     element={<AdminDashboard />} />
+          <Route path="users"         element={<AdminUsers />} />
+          <Route path="content"       element={<AdminContent />} />
+          <Route path="fertilizers"   element={<AdminFertilizers />} />
+          <Route path="gov-data"      element={<GovDataDashboard />} />
           <Route path="market-prices" element={<MarketPricesAdmin />} />
         </Route>
 
-        {/* Fallback */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

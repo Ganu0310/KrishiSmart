@@ -149,7 +149,7 @@ export default function FertilizersPage() {
                       alt={fertilizer.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                       onError={(e) => {
-                        e.currentTarget.src = "https://via.placeholder.com/400x300?text=Fertilizer";
+                        e.currentTarget.style.display = "none";
                       }}
                     />
                     {fertilizer.organic && (

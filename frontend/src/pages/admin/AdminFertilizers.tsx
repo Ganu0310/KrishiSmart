@@ -27,6 +27,10 @@ import { Plus, Trash2, Upload, Leaf, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { BASE_URL } from "@/services/api";
 import { useSocket } from "@/context/SocketContext";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { adminFertilizerSchema, type AdminFertilizerFormValues } from "@/lib/validations/fertilizer";
 
 export default function AdminFertilizers() {
   const [fertilizers, setFertilizers] = useState<Fertilizer[]>([]);
@@ -34,22 +38,25 @@ export default function AdminFertilizers() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const socket = useSocket();
 
-  // Form state
-  const [formData, setFormData] = useState({
-    name: "",
-    brand: "",
-    description: "",
-    nitrogen: "",
-    phosphorus: "",
-    potassium: "",
-    micronutrients: "",
-    pricePerKg: "",
-    suitableCrops: [] as string[],
-    applicationMethod: "soil",
-    dosageGuide: "",
-    precautions: "",
-    organic: false,
+  const form = useForm<AdminFertilizerFormValues>({
+    resolver: zodResolver(adminFertilizerSchema),
+    defaultValues: {
+      name: "",
+      brand: "",
+      description: "",
+      nitrogen: 0,
+      phosphorus: 0,
+      potassium: 0,
+      micronutrients: "",
+      pricePerKg: 0,
+      suitableCrops: [],
+      applicationMethod: "soil",
+      dosageGuide: "",
+      precautions: "",
+      organic: false,
+    },
   });
+
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
 
@@ -109,31 +116,24 @@ export default function AdminFertilizers() {
     }
   };
 
-  const handleCropToggle = (crop: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      suitableCrops: prev.suitableCrops.includes(crop)
-        ? prev.suitableCrops.filter((c) => c !== crop)
-        : [...prev.suitableCrops, crop],
-    }));
-  };
+
 
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const handleEdit = (fertilizer: Fertilizer) => {
     console.log("Editing fertilizer:", fertilizer);
     setEditingId(fertilizer._id);
-    setFormData({
+    form.reset({
       name: fertilizer.name,
       brand: fertilizer.brand || "",
       description: fertilizer.description,
-      nitrogen: fertilizer.nutrients?.nitrogen?.toString() || "0",
-      phosphorus: fertilizer.nutrients?.phosphorus?.toString() || "0",
-      potassium: fertilizer.nutrients?.potassium?.toString() || "0",
+      nitrogen: fertilizer.nutrients?.nitrogen || 0,
+      phosphorus: fertilizer.nutrients?.phosphorus || 0,
+      potassium: fertilizer.nutrients?.potassium || 0,
       micronutrients: fertilizer.nutrients?.micronutrients?.join(", ") || "",
-      pricePerKg: fertilizer.pricePerKg?.toString() || "0",
+      pricePerKg: fertilizer.pricePerKg || 0,
       suitableCrops: fertilizer.suitableCrops || [],
-      applicationMethod: fertilizer.applicationMethod || "soil",
+      applicationMethod: (fertilizer.applicationMethod as any) || "soil",
       dosageGuide: fertilizer.dosageGuide ? JSON.stringify(fertilizer.dosageGuide) : "",
       precautions: fertilizer.precautions || "",
       organic: fertilizer.organic || false,
@@ -159,42 +159,30 @@ export default function AdminFertilizers() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.name || !formData.description || !formData.pricePerKg) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    if (formData.suitableCrops.length === 0) {
-      toast.error("Please select at least one suitable crop");
-      return;
-    }
-
+  const onSubmit = async (values: AdminFertilizerFormValues) => {
     try {
       const submitData = new FormData();
-      submitData.append("name", formData.name);
-      submitData.append("brand", formData.brand);
-      submitData.append("description", formData.description);
-      submitData.append("pricePerKg", formData.pricePerKg);
-      submitData.append("applicationMethod", formData.applicationMethod);
-      submitData.append("precautions", formData.precautions);
-      submitData.append("organic", formData.organic.toString());
+      submitData.append("name", values.name);
+      submitData.append("brand", values.brand || "");
+      submitData.append("description", values.description);
+      submitData.append("pricePerKg", values.pricePerKg.toString());
+      submitData.append("applicationMethod", values.applicationMethod);
+      submitData.append("precautions", values.precautions || "");
+      submitData.append("organic", values.organic.toString());
 
       // Nutrients
       const nutrients = {
-        nitrogen: Number(formData.nitrogen) || 0,
-        phosphorus: Number(formData.phosphorus) || 0,
-        potassium: Number(formData.potassium) || 0,
-        micronutrients: formData.micronutrients
-          ? formData.micronutrients.split(",").map((m) => m.trim())
+        nitrogen: values.nitrogen,
+        phosphorus: values.phosphorus,
+        potassium: values.potassium,
+        micronutrients: values.micronutrients
+          ? values.micronutrients.split(",").map((m) => m.trim())
           : [],
       };
       submitData.append("nutrients", JSON.stringify(nutrients));
 
       // Suitable crops
-      submitData.append("suitableCrops", JSON.stringify(formData.suitableCrops));
+      submitData.append("suitableCrops", JSON.stringify(values.suitableCrops));
 
       // Growth stage (default all true for now)
       submitData.append(
@@ -208,9 +196,9 @@ export default function AdminFertilizers() {
       );
 
       // Dosage guide
-      if (formData.dosageGuide) {
+      if (values.dosageGuide) {
         try {
-          const dosageObj = JSON.parse(formData.dosageGuide);
+          const dosageObj = JSON.parse(values.dosageGuide);
           submitData.append("dosageGuide", JSON.stringify(dosageObj));
         } catch {
           toast.error("Invalid dosage guide format. Use JSON format.");
@@ -245,15 +233,15 @@ export default function AdminFertilizers() {
 
   const resetForm = () => {
     setEditingId(null);
-    setFormData({
+    form.reset({
       name: "",
       brand: "",
       description: "",
-      nitrogen: "",
-      phosphorus: "",
-      potassium: "",
+      nitrogen: 0,
+      phosphorus: 0,
+      potassium: 0,
       micronutrients: "",
-      pricePerKg: "",
+      pricePerKg: 0,
       suitableCrops: [],
       applicationMethod: "soil",
       dosageGuide: "",
@@ -292,249 +280,193 @@ export default function AdminFertilizers() {
                   : "Fill in the details to add a new fertilizer."}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Image Upload */}
-              <div>
-                <Label>Product Image</Label>
-                <div className="mt-2">
-                  {imagePreview ? (
-                    <div className="relative w-full h-48 border-2 border-dashed rounded-lg overflow-hidden">
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        className="absolute top-2 right-2"
-                        onClick={() => {
-                          setImageFile(null);
-                          setImagePreview("");
-                        }}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ) : (
-                    <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
-                      <Upload className="w-12 h-12 text-muted-foreground mb-2" />
-                      <span className="text-sm text-muted-foreground">
-                        Click to upload image
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-                </div>
-              </div>
-
-              {/* Basic Info */}
-              <div className="grid grid-cols-2 gap-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {/* Image Upload */}
                 <div>
-                  <Label htmlFor="name">Name *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="brand">Brand</Label>
-                  <Input
-                    id="brand"
-                    value={formData.brand}
-                    onChange={(e) =>
-                      setFormData({ ...formData, brand: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="description">Description *</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  required
-                  rows={3}
-                />
-              </div>
-
-              {/* NPK */}
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="nitrogen">Nitrogen (N) %</Label>
-                  <Input
-                    id="nitrogen"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={formData.nitrogen}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nitrogen: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phosphorus">Phosphorus (P) %</Label>
-                  <Input
-                    id="phosphorus"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={formData.phosphorus}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phosphorus: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="potassium">Potassium (K) %</Label>
-                  <Input
-                    id="potassium"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={formData.potassium}
-                    onChange={(e) =>
-                      setFormData({ ...formData, potassium: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="micronutrients">
-                  Micronutrients (comma-separated)
-                </Label>
-                <Input
-                  id="micronutrients"
-                  value={formData.micronutrients}
-                  onChange={(e) =>
-                    setFormData({ ...formData, micronutrients: e.target.value })
-                  }
-                  placeholder="e.g., Zinc, Iron, Manganese"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="price">Price per Kg (₹) *</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    min="0"
-                    value={formData.pricePerKg}
-                    onChange={(e) =>
-                      setFormData({ ...formData, pricePerKg: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="method">Application Method</Label>
-                  <select
-                    id="method"
-                    value={formData.applicationMethod}
-                    onChange={(e) =>
-                      setFormData({ ...formData, applicationMethod: e.target.value })
-                    }
-                    className="w-full h-10 px-3 border rounded-md"
-                  >
-                    <option value="soil">Soil</option>
-                    <option value="foliar">Foliar</option>
-                    <option value="drip">Drip</option>
-                    <option value="broadcast">Broadcast</option>
-                    <option value="mixed">Mixed</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Suitable Crops */}
-              <div>
-                <Label>Suitable Crops *</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {crops.map((crop) => (
-                    <div key={crop} className="flex items-center gap-2">
-                      <Checkbox
-                        id={`crop-${crop}`}
-                        checked={formData.suitableCrops.includes(crop)}
-                        onCheckedChange={() => handleCropToggle(crop)}
-                      />
-                      <label
-                        htmlFor={`crop-${crop}`}
-                        className="text-sm capitalize cursor-pointer"
-                      >
-                        {crop}
+                  <Label>Product Image</Label>
+                  <div className="mt-2">
+                    {imagePreview ? (
+                      <div className="relative w-full h-48 border-2 border-dashed rounded-lg overflow-hidden">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={() => {
+                            setImageFile(null);
+                            setImagePreview("");
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
+                        <Upload className="w-12 h-12 text-muted-foreground mb-2" />
+                        <span className="text-sm text-muted-foreground">
+                          Click to upload image
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="hidden"
+                        />
                       </label>
-                    </div>
-                  ))}
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <Label htmlFor="dosage">
-                  Dosage Guide (JSON format, optional)
-                </Label>
-                <Textarea
-                  id="dosage"
-                  value={formData.dosageGuide}
-                  onChange={(e) =>
-                    setFormData({ ...formData, dosageGuide: e.target.value })
-                  }
-                  placeholder='{"grape": "50-75 kg/acre", "onion": "40-60 kg/acre"}'
-                  rows={2}
-                />
-              </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name *</FormLabel>
+                      <FormControl><Input {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="brand" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Brand</FormLabel>
+                      <FormControl><Input {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
 
-              <div>
-                <Label htmlFor="precautions">Precautions</Label>
-                <Textarea
-                  id="precautions"
-                  value={formData.precautions}
-                  onChange={(e) =>
-                    setFormData({ ...formData, precautions: e.target.value })
-                  }
-                  rows={2}
-                />
-              </div>
+                <FormField control={form.control} name="description" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description *</FormLabel>
+                    <FormControl><Textarea rows={3} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
 
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="organic"
-                  checked={formData.organic}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, organic: checked as boolean })
-                  }
-                />
-                <label htmlFor="organic" className="text-sm cursor-pointer">
-                  Organic Product
-                </label>
-              </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField control={form.control} name="nitrogen" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nitrogen (N) %</FormLabel>
+                      <FormControl><Input type="number" min="0" max="100" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="phosphorus" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phosphorus (P) %</FormLabel>
+                      <FormControl><Input type="number" min="0" max="100" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="potassium" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Potassium (K) %</FormLabel>
+                      <FormControl><Input type="number" min="0" max="100" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
 
-              <div className="flex gap-2 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">{editingId ? "Update Fertilizer" : "Add Fertilizer"}</Button>
-              </div>
-            </form>
+                <FormField control={form.control} name="micronutrients" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Micronutrients (comma-separated)</FormLabel>
+                    <FormControl><Input placeholder="e.g., Zinc, Iron" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="pricePerKg" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Price per Kg (₹) *</FormLabel>
+                      <FormControl><Input type="number" min="0" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="applicationMethod" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Application Method</FormLabel>
+                      <FormControl>
+                        <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" {...field}>
+                          <option value="soil">Soil</option>
+                          <option value="foliar">Foliar</option>
+                          <option value="drip">Drip</option>
+                          <option value="broadcast">Broadcast</option>
+                          <option value="mixed">Mixed</option>
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+
+                <FormField control={form.control} name="suitableCrops" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Suitable Crops *</FormLabel>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {crops.map((crop) => (
+                        <div key={crop} className="flex items-center gap-2">
+                          <Checkbox
+                            id={`crop-${crop}`}
+                            checked={field.value?.includes(crop)}
+                            onCheckedChange={(checked) => {
+                              const current = field.value || [];
+                              const updated = checked
+                                ? [...current, crop]
+                                : current.filter((c) => c !== crop);
+                              field.onChange(updated);
+                            }}
+                          />
+                          <label htmlFor={`crop-${crop}`} className="text-sm capitalize cursor-pointer">
+                            {crop}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="dosageGuide" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dosage Guide (JSON format, optional)</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder='{"grape": "50-75 kg/acre"}' rows={2} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="precautions" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Precautions</FormLabel>
+                    <FormControl><Textarea rows={2} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="organic" render={({ field }) => (
+                  <FormItem className="flex items-center gap-2 space-y-0">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormLabel className="font-normal cursor-pointer text-sm">Organic Product</FormLabel>
+                  </FormItem>
+                )} />
+
+                <div className="flex gap-2 justify-end pt-4">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">{editingId ? "Update Fertilizer" : "Add Fertilizer"}</Button>
+                </div>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>

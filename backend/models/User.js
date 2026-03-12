@@ -9,21 +9,18 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: true,
       trim: true,
       lowercase: true,
-      unique: true,
+      index: { unique: true, sparse: true },
     },
     mobile: {
       type: String,
       trim: true,
-      unique: true,
-      sparse: true, // Allows null/undefined to not conflict uniqueness
+      index: { unique: true, sparse: true },
     },
     password: {
       type: String,
-      required: true,
-      minlength: 6,
+      // Optional for mobile login flow, required for admin
     },
     role: {
       type: String,
